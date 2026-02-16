@@ -18,9 +18,25 @@ catch (InvalidOperationException ex)
     return 1;
 }
 
-// 2. Prompt for iteration path
-var iterationPath = ConsoleUI.PromptIterationPath();
-var fullIterationPath = $"{settings.AdoProject}\\{iterationPath}";
+// Detect non-interactive mode: iteration path passed as CLI arg
+var interactive = args.Length == 0 && !Console.IsInputRedirected;
+
+// 2. Get iteration path
+string iterationPath;
+if (args.Length > 0)
+{
+    iterationPath = args[0];
+    AnsiConsole.MarkupLine($"Iteration path: [green]{iterationPath.EscapeMarkup()}[/]");
+}
+else
+{
+    iterationPath = ConsoleUI.PromptIterationPath();
+}
+
+// If the user already included the project prefix, use as-is; otherwise prepend it
+var fullIterationPath = iterationPath.StartsWith(settings.AdoProject + "\\", StringComparison.OrdinalIgnoreCase)
+    ? iterationPath
+    : $"{settings.AdoProject}\\{iterationPath}";
 
 // 3. Query Azure DevOps
 var devOps = new DevOpsService(settings);
@@ -28,7 +44,7 @@ List<ReleaseNotesScribe.Models.WorkItemInfo> workItems;
 try
 {
     workItems = await ConsoleUI.WithSpinner(
-        $"Querying Azure DevOps for closed items under [green]{fullIterationPath}[/]...",
+        $"Querying Azure DevOps for closed items under [green]{fullIterationPath.EscapeMarkup()}[/]...",
         () => devOps.QueryClosedWorkItemsAsync(fullIterationPath));
 }
 catch (Exception ex)
@@ -45,18 +61,38 @@ if (workItems.Count == 0)
 
 // 4. Display table and prompt selection
 ConsoleUI.DisplayWorkItemTable(workItems);
-var selected = ConsoleUI.PromptSelectWorkItems(workItems);
 
-if (selected.Count == 0)
+List<ReleaseNotesScribe.Models.WorkItemInfo> selected;
+if (interactive)
 {
-    ConsoleUI.WriteWarning("No items selected. Exiting.");
-    return 0;
+    selected = ConsoleUI.PromptSelectWorkItems(workItems);
+    if (selected.Count == 0)
+    {
+        ConsoleUI.WriteWarning("No items selected. Exiting.");
+        return 0;
+    }
+}
+else
+{
+    selected = workItems;
+    AnsiConsole.MarkupLine("[dim]Non-interactive mode: using all items[/]");
 }
 
 AnsiConsole.MarkupLine($"\n[dim]{selected.Count} item(s) selected[/]");
 
-// 5. Prompt for version label
-var versionLabel = ConsoleUI.PromptVersionLabel(iterationPath);
+// 5. Get version label
+string versionLabel;
+if (interactive)
+{
+    versionLabel = ConsoleUI.PromptVersionLabel(iterationPath);
+}
+else
+{
+    versionLabel = iterationPath.Contains('\\')
+        ? iterationPath[(iterationPath.LastIndexOf('\\') + 1)..]
+        : iterationPath;
+    AnsiConsole.MarkupLine($"Version label: [green]{versionLabel.EscapeMarkup()}[/]");
+}
 
 // 6. Generate release notes via Azure OpenAI
 var aiService = new AiService(settings);
@@ -75,6 +111,16 @@ catch (Exception ex)
 
 // 7. Display and optionally save
 ConsoleUI.DisplayReleaseNotes(releaseNotes);
-await ConsoleUI.PromptSaveToFile(releaseNotes);
+
+if (interactive)
+{
+    await ConsoleUI.PromptSaveToFile(releaseNotes);
+}
+else
+{
+    var filename = $"release-notes-{versionLabel.Replace(" ", "-").Replace("\\", "-")}.md";
+    await File.WriteAllTextAsync(filename, releaseNotes);
+    AnsiConsole.MarkupLine($"[green]Saved to {filename.EscapeMarkup()}[/]");
+}
 
 return 0;
