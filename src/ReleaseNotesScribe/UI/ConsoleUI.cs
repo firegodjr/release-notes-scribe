@@ -17,7 +17,7 @@ public static class ConsoleUI
     public static string PromptIterationPath()
     {
         return AnsiConsole.Prompt(
-            new TextPrompt<string>("Enter the [green]iteration path[/] (e.g. [dim]development\\v4.2[/]):")
+            new TextPrompt<string>("Enter [green]iteration(s)[/], comma-separated (e.g. [dim]4.2[/] or [dim]4.2, 4.3[/]):")
                 .ValidationErrorMessage("[red]Iteration path cannot be empty[/]")
                 .Validate(input => !string.IsNullOrWhiteSpace(input)
                     ? ValidationResult.Success()

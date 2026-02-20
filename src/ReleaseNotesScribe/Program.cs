@@ -21,22 +21,32 @@ catch (InvalidOperationException ex)
 // Detect non-interactive mode: iteration path passed as CLI arg
 var interactive = args.Length == 0 && !Console.IsInputRedirected;
 
-// 2. Get iteration path
-string iterationPath;
+// 2. Get iteration path(s) — comma-separated
+string iterationInput;
 if (args.Length > 0)
 {
-    iterationPath = args[0];
-    AnsiConsole.MarkupLine($"Iteration path: [green]{iterationPath.EscapeMarkup()}[/]");
+    iterationInput = args[0];
+    AnsiConsole.MarkupLine($"Iteration path(s): [green]{iterationInput.EscapeMarkup()}[/]");
 }
 else
 {
-    iterationPath = ConsoleUI.PromptIterationPath();
+    iterationInput = ConsoleUI.PromptIterationPath();
 }
 
-// If the user already included the project prefix, use as-is; otherwise prepend it
-var fullIterationPath = iterationPath.StartsWith(settings.AdoProject + "\\", StringComparison.OrdinalIgnoreCase)
-    ? iterationPath
-    : $"{settings.AdoProject}\\{iterationPath}";
+// Split on commas and normalize each path: auto-prepend development\ and project prefix
+var iterationPaths = iterationInput
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+    .Select(p =>
+    {
+        // If no backslash, assume it's under development\
+        if (!p.Contains('\\'))
+            p = $"development\\{p}";
+        // Prepend project prefix if missing
+        if (!p.StartsWith(settings.AdoProject + "\\", StringComparison.OrdinalIgnoreCase))
+            p = $"{settings.AdoProject}\\{p}";
+        return p;
+    })
+    .ToArray();
 
 // 3. Query Azure DevOps
 var devOps = new DevOpsService(settings);
@@ -49,9 +59,10 @@ try
         completedOnly = ConsoleUI.PromptCompletedOnly();
     }
 
+    var pathsDisplay = string.Join(", ", iterationPaths);
     workItems = await ConsoleUI.WithSpinner(
-        $"Querying Azure DevOps for closed items under [green]{fullIterationPath.EscapeMarkup()}[/]...",
-        () => devOps.QueryClosedWorkItemsAsync(fullIterationPath, completedOnly));
+        $"Querying Azure DevOps for closed items under [green]{pathsDisplay.EscapeMarkup()}[/]...",
+        () => devOps.QueryClosedWorkItemsAsync(iterationPaths, completedOnly));
 }
 catch (Exception ex)
 {
@@ -90,13 +101,13 @@ AnsiConsole.MarkupLine($"\n[dim]{selected.Count} item(s) selected[/]");
 string versionLabel;
 if (interactive)
 {
-    versionLabel = ConsoleUI.PromptVersionLabel(iterationPath);
+    versionLabel = ConsoleUI.PromptVersionLabel(iterationInput);
 }
 else
 {
-    versionLabel = iterationPath.Contains('\\')
-        ? iterationPath[(iterationPath.LastIndexOf('\\') + 1)..]
-        : iterationPath;
+    versionLabel = iterationInput.Contains('\\')
+        ? iterationInput[(iterationInput.LastIndexOf('\\') + 1)..]
+        : iterationInput;
     AnsiConsole.MarkupLine($"Version label: [green]{versionLabel.EscapeMarkup()}[/]");
 }
 
