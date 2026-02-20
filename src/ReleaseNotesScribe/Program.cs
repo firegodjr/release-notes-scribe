@@ -41,11 +41,17 @@ var fullIterationPath = iterationPath.StartsWith(settings.AdoProject + "\\", Str
 // 3. Query Azure DevOps
 var devOps = new DevOpsService(settings);
 List<ReleaseNotesScribe.Models.WorkItemInfo> workItems;
+var completedOnly = false;
 try
 {
+    if (interactive)
+    {
+        completedOnly = ConsoleUI.PromptCompletedOnly();
+    }
+
     workItems = await ConsoleUI.WithSpinner(
         $"Querying Azure DevOps for closed items under [green]{fullIterationPath.EscapeMarkup()}[/]...",
-        () => devOps.QueryClosedWorkItemsAsync(fullIterationPath));
+        () => devOps.QueryClosedWorkItemsAsync(fullIterationPath, completedOnly));
 }
 catch (Exception ex)
 {

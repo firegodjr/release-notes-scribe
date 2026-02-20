@@ -26,12 +26,13 @@ public class DevOpsService
         _settings = settings;
     }
 
-    public async Task<List<WorkItemInfo>> QueryClosedWorkItemsAsync(string iterationPath)
+    public async Task<List<WorkItemInfo>> QueryClosedWorkItemsAsync(string iterationPath, bool onlyClosed)
     {
         var orgUrl = new Uri($"https://dev.azure.com/{_settings.AdoOrg}");
         var credentials = new VssBasicCredential(string.Empty, _settings.AdoPat);
         using var connection = new VssConnection(orgUrl, credentials);
         var witClient = connection.GetClient<WorkItemTrackingHttpClient>();
+        var closedFilter = "AND [System.State] IN ('Closed', 'Done')";
 
         // Step 1: Query IDs via WIQL
         var wiql = new Wiql
@@ -42,7 +43,7 @@ public class DevOpsService
                 WHERE [System.TeamProject] = '{_settings.AdoProject}'
                   AND [System.IterationPath] UNDER '{iterationPath}'
                   AND [System.WorkItemType] IN ('Epic','Feature','User Story','Defect','Design Debt')
-                  AND [System.State] IN ('Closed', 'Done')
+                  {(onlyClosed ? closedFilter : "")}
                 ORDER BY [System.WorkItemType] ASC, [System.Id] ASC
                 """
         };

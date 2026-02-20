@@ -24,6 +24,12 @@ public static class ConsoleUI
                     : ValidationResult.Error()));
     }
 
+    public static bool PromptCompletedOnly()
+    {
+        return !AnsiConsole.Prompt(
+            new ConfirmationPrompt("Should we consider [green]non-completed[/] items that match the iteration path?"));
+    }
+
     public static void DisplayWorkItemTable(IReadOnlyList<WorkItemInfo> items)
     {
         var table = new Table()
