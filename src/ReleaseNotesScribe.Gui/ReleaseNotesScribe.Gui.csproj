@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>ReleaseNotesScribe.Gui</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ElectronNET.API" Version="23.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ReleaseNotesScribe.Core\ReleaseNotesScribe.Core.csproj" />
+  </ItemGroup>
+
+  <!-- Build Vue SPA before .NET build if wwwroot doesn't exist -->
+  <Target Name="BuildClientApp" BeforeTargets="Build" Condition="!Exists('wwwroot/index.html')">
+    <Exec Command="npm install" WorkingDirectory="ClientApp" />
+    <Exec Command="npm run build" WorkingDirectory="ClientApp" />
+  </Target>
+
+</Project>

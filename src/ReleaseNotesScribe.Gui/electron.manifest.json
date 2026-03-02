@@ -1,0 +1,23 @@
+{
+  "executable": "ReleaseNotesScribe.Gui",
+  "splashscreen": {
+    "imageFile": ""
+  },
+  "name": "Release Notes Scribe",
+  "author": "",
+  "singleInstance": true,
+  "environment": "Production",
+  "build": {
+    "appId": "com.release-notes-scribe.app",
+    "productName": "Release Notes Scribe",
+    "copyright": "",
+    "buildVersion": "1.0.0",
+    "compression": "maximum",
+    "directories": {
+      "output": "../../../bin/Desktop"
+    },
+    "files": [
+      "**/*"
+    ]
+  }
+}

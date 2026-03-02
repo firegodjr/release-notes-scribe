@@ -1,4 +1,5 @@
 using ReleaseNotesScribe.Configuration;
+using ReleaseNotesScribe.Helpers;
 using ReleaseNotesScribe.Services;
 using ReleaseNotesScribe.UI;
 using Spectre.Console;
@@ -34,19 +35,7 @@ else
 }
 
 // Split on commas and normalize each path: auto-prepend development\ and project prefix
-var iterationPaths = iterationInput
-    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-    .Select(p =>
-    {
-        // If no backslash, assume it's under development\
-        if (!p.Contains('\\'))
-            p = $"development\\{p}";
-        // Prepend project prefix if missing
-        if (!p.StartsWith(settings.AdoProject + "\\", StringComparison.OrdinalIgnoreCase))
-            p = $"{settings.AdoProject}\\{p}";
-        return p;
-    })
-    .ToArray();
+var iterationPaths = IterationPathHelper.NormalizePaths(iterationInput, settings.AdoProject);
 
 // 3. Query Azure DevOps
 var devOps = new DevOpsService(settings);

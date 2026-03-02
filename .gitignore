@@ -19,6 +19,10 @@ obj/
 publish/
 out/
 
+## Node / Vue SPA
+node_modules/
+src/ReleaseNotesScribe.Gui/wwwroot/
+
 ## OS
 .DS_Store
 Thumbs.db
