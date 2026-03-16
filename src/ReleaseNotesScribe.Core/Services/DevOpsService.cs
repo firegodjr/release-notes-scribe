@@ -32,7 +32,6 @@ public class DevOpsService
         var credentials = new VssBasicCredential(string.Empty, _settings.AdoPat);
         using var connection = new VssConnection(orgUrl, credentials);
         var witClient = connection.GetClient<WorkItemTrackingHttpClient>();
-        var closedFilter = "AND [System.State] IN ('Closed', 'Done')";
 
         var pathClauses = iterationPaths
             .Select(p => $"[System.IterationPath] UNDER '{p}'");
@@ -47,7 +46,7 @@ public class DevOpsService
                 WHERE [System.TeamProject] = '{_settings.AdoProject}'
                   AND ({iterationFilter})
                   AND [System.WorkItemType] IN ('Epic','Feature','User Story','Defect','Design Debt')
-                  {(onlyClosed ? closedFilter : "")}
+                  {(onlyClosed ? "AND [System.State] IN ('Closed', 'Done')" : "AND [System.State] NOT IN ('Removed')")}
                 ORDER BY [System.WorkItemType] ASC, [System.Id] ASC
                 """
         };

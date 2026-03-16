@@ -12,6 +12,7 @@ export const useWorkItemsStore = defineStore('workitems', () => {
   const versionLabel = ref('')
   const generatedMarkdown = ref('')
   const generating = ref(false)
+  const generationActive = ref(false)
 
   const selectedItems = computed(() => items.value.filter(i => i.selected))
   const hasSelection = computed(() => selectedItems.value.length > 0)
@@ -72,10 +73,16 @@ export const useWorkItemsStore = defineStore('workitems', () => {
     }
   }
 
+  function resetGeneration() {
+    generatedMarkdown.value = ''
+    error.value = null
+    generationActive.value = false
+  }
+
   return {
     items, loading, error, iterationPath, onlyClosed,
-    versionLabel, generatedMarkdown, generating,
+    versionLabel, generatedMarkdown, generating, generationActive,
     selectedItems, hasSelection,
-    queryWorkItems, toggleItem, selectAll, deselectAll, generateNotes
+    queryWorkItems, toggleItem, selectAll, deselectAll, generateNotes, resetGeneration
   }
 })

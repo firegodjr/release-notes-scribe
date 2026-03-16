@@ -66,11 +66,16 @@
 
 <script setup lang="ts">
 import { useWorkItemsStore } from '../stores/workitems'
+import { onBeforeRouteLeave } from 'vue-router'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import MarkdownPreview from '../components/MarkdownPreview.vue'
 
 const store = useWorkItemsStore()
+
+onBeforeRouteLeave(() => {
+  store.resetGeneration()
+})
 
 async function copyToClipboard() {
   await navigator.clipboard.writeText(store.generatedMarkdown)

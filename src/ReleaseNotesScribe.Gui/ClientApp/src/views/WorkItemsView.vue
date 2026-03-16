@@ -115,6 +115,7 @@ function typeClass(type: string): string {
 }
 
 function goGenerate() {
+  store.generationActive = true
   router.push('/generate')
 }
 </script>

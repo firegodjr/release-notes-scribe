@@ -66,6 +66,14 @@ body {
   background: rgba(59, 130, 246, 0.08);
 }
 
+.app-header nav .nav-disabled {
+  color: var(--color-border);
+  font-size: 0.9rem;
+  padding: 0.25rem 0.5rem;
+  cursor: default;
+  user-select: none;
+}
+
 .app-main {
   flex: 1;
   padding: 1.5rem;

@@ -4,7 +4,11 @@
       <h1>Release Notes Scribe</h1>
       <nav v-if="configStore.isConfigured">
         <router-link to="/workitems">Work Items</router-link>
-        <router-link to="/generate">Generate</router-link>
+        <router-link
+          v-if="workItemsStore.generationActive"
+          to="/generate"
+        >Generate</router-link>
+        <span v-else class="nav-disabled">Generate</span>
       </nav>
     </header>
     <main class="app-main">
@@ -15,6 +19,8 @@
 
 <script setup lang="ts">
 import { useConfigStore } from './stores/config'
+import { useWorkItemsStore } from './stores/workitems'
 
 const configStore = useConfigStore()
+const workItemsStore = useWorkItemsStore()
 </script>
